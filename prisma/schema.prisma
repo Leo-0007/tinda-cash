@@ -1,0 +1,321 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum KycStatus {
+  not_started
+  pending
+  approved
+  rejected
+
+  @@map("kyc_status")
+}
+
+enum TransactionStatus {
+  pending
+  processing
+  completed
+  failed
+  cancelled
+  refunded
+
+  @@map("transaction_status")
+}
+
+enum PaymentMethod {
+  mpesa
+  airtel_money
+  orange_money
+  multicaixa
+  unitel_money
+  card
+  bank
+  sepa
+  fps
+  pix
+  interac
+  apple_pay
+
+  @@map("payment_method")
+}
+
+enum Currency {
+  EUR
+  GBP
+  USD
+  CHF
+  CAD
+  BRL
+  AOA
+  CDF
+  XAF
+
+  @@map("currency")
+}
+
+// ─────────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(cuid())
+  phone         String     @unique
+  email         String?    @unique
+  firstName     String
+  lastName      String
+  country       String
+  password      String
+  kycStatus     KycStatus  @default(not_started)
+  kycLevel      Int        @default(0)
+  referralCode  String?    @unique
+  onfidoApplicantId String? @unique
+  onfidoCheckId     String?
+  isActive      Boolean    @default(true)
+  emailVerified Boolean    @default(false)
+  phoneVerified Boolean    @default(false)
+  preferredLang String     @default("fr")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  wallets       Wallet[]
+  transactions  Transaction[]
+  beneficiaries Beneficiary[]
+  sessions      Session[]
+  otpCodes      OtpCode[]
+  referrals     Referral[]    @relation("ReferrerReferrals")
+  referredBy    Referral?     @relation("ReferredReferral")
+  notifications Notification[]
+  aiConversations AIConversation[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String
+  currency  Currency
+  balance   Float    @default(0)
+  reserved  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletTransactions WalletTransaction[]
+
+  @@unique([userId, currency])
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id            String   @id @default(cuid())
+  walletId      String
+  type          String
+  amount        Float
+  balanceBefore Float
+  balanceAfter  Float
+  reference     String?
+  description   String?
+  createdAt     DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@map("wallet_transactions")
+}
+
+model Beneficiary {
+  id            String  @id @default(cuid())
+  userId        String
+  name          String
+  type          String
+  currency      String
+  country       String
+  iban          String?
+  bic           String?
+  bankName      String?
+  bankCode      String?
+  accountNumber String?
+  sortCode      String?
+  phone         String?
+  multicaixaId  String?
+  unitelMoneyId String?
+  isFavorite    Boolean  @default(false)
+  lastUsedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("beneficiaries")
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  ref           String            @unique @default(cuid())
+  userId        String
+  beneficiaryId String
+
+  fromCurrency  String
+  fromAmount    Float
+  fromCountry   String
+  paymentMethod PaymentMethod
+
+  toCurrency    String
+  toAmount      Float
+  toCountry     String
+
+  rate          Float
+  fee           Float
+
+  status        TransactionStatus @default(pending)
+  failureReason String?
+
+  flutterwaveRef   String?
+  wiseTransferId   String?
+  airwallexRef     String?
+  externalRef      String?
+
+  // AI-powered risk score (0-100, 100 = safest)
+  aiRiskScore      Int?
+  aiRiskReason     String?
+
+  estimatedArrival DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id])
+  beneficiary Beneficiary @relation(fields: [beneficiaryId], references: [id])
+  events      TransactionEvent[]
+
+  @@map("transactions")
+}
+
+model TransactionEvent {
+  id            String   @id @default(cuid())
+  transactionId String
+  status        TransactionStatus
+  provider      String?
+  providerRef   String?
+  message       String?
+  rawData       Json?
+  createdAt     DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@map("transaction_events")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String
+  type      String
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp_codes")
+}
+
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  fromCurrency String
+  toCurrency   String
+  rate         Float
+  source       String   @default("exchangerate-api")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([fromCurrency, toCurrency])
+  @@map("exchange_rates")
+}
+
+model Referral {
+  id         String   @id @default(cuid())
+  referrerId String
+  referredId String   @unique
+  status     String   @default("pending")
+  bonusPaid  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  referrer User @relation("ReferrerReferrals", fields: [referrerId], references: [id])
+  referred User @relation("ReferredReferral", fields: [referredId], references: [id])
+
+  @@map("referrals")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────
+// AI Multi-Agent System
+// ─────────────────────────────────────────────
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  agent     String   // support | fx_advisor | compliance | transfer
+  title     String?
+  status    String   @default("active") // active | resolved | escalated
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@map("ai_conversations")
+}
+
+model AIMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // user | assistant | system | tool
+  content        String
+  agent          String?  // which agent responded
+  toolCalls      Json?    // function calls made
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("ai_messages")
+}
