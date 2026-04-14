@@ -227,9 +227,9 @@ export default function RegisterPage() {
 
               <p className="text-[11px] text-white/25 text-center leading-relaxed">
                 {t("auth.register.terms")}{" "}
-                <a href="#" className="text-cyan-400/60 hover:text-cyan-400">{t("auth.register.terms_link")}</a>{" "}
+                <a href="/terms" className="text-cyan-400/60 hover:text-cyan-400">{t("auth.register.terms_link")}</a>{" "}
                 {t("auth.register.privacy")}{" "}
-                <a href="#" className="text-cyan-400/60 hover:text-cyan-400">{t("auth.register.privacy_link")}</a>.
+                <a href="/privacy" className="text-cyan-400/60 hover:text-cyan-400">{t("auth.register.privacy_link")}</a>.
               </p>
 
               <div className="flex items-center gap-3">

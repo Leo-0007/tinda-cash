@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
 // Routes that require authentication
-const PROTECTED_ROUTES = ["/dashboard", "/send", "/history", "/profile", "/beneficiaries", "/settings"];
+const PROTECTED_ROUTES = ["/dashboard", "/send", "/history", "/profile", "/beneficiaries", "/settings", "/admin"];
 
 // Routes only for unauthenticated users
 const AUTH_ROUTES = ["/login", "/register"];
@@ -54,6 +54,7 @@ export const config = {
     "/profile/:path*",
     "/beneficiaries/:path*",
     "/settings/:path*",
+    "/admin/:path*",
     "/login",
     "/register",
   ],

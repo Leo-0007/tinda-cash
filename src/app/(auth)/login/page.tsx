@@ -94,7 +94,7 @@ export default function LoginPage() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t("auth.login.password")}</label>
-                <a href="#" className="text-xs text-cyan-400 hover:text-cyan-300">{t("auth.login.forgot")}</a>
+                <a href="/forgot-password" className="text-xs text-cyan-400 hover:text-cyan-300">{t("auth.login.forgot")}</a>
               </div>
               <div className="relative">
                 <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />

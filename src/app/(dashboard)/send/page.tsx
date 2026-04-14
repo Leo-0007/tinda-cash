@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -90,9 +91,43 @@ export default function SendPage() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setIsSubmitting(false);
-    setStep("success");
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fromCurrency: from.currency,
+          toCurrency: dest.currency,
+          fromAmount: numAmount,
+          toAmount: received,
+          rate: rateData?.rate ?? 1,
+          fee,
+          fromCountry: from.code,
+          toCountry: dest.code,
+          recipientName,
+          recipientPhone,
+          deliveryMethod,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data?.requiresKyc) {
+          toast.error("Vérification d'identité requise au-delà de 150€");
+          router.push("/profile?kyc=1");
+          return;
+        }
+        throw new Error(data?.error || "Erreur lors de la création du transfert");
+      }
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+      // Dev fallback — go directly to receipt page
+      router.push(`/transfer/${data.ref}`);
+    } catch (err: any) {
+      toast.error(err?.message || "Erreur inattendue");
+      setIsSubmitting(false);
+    }
   };
 
   // Tier 1 countries shown by default, Tier 2 on expand
@@ -316,6 +351,17 @@ export default function SendPage() {
                   <span className="text-violet-400 font-semibold">{t("send.ai_tip")}</span> {numAmount > 200 ? t("send.ai_big") : t("send.ai_small")}
                 </p>
               </div>
+
+              {/* KYC warning above 150€ */}
+              {numAmount > 150 && (
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/20">
+                  <Shield size={16} className="text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-200/80">
+                    <span className="font-semibold text-amber-300">Vérification requise.</span>{" "}
+                    Au-delà de 150€, nous devons vérifier votre identité (KYC) avant de traiter le paiement.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

@@ -420,7 +420,7 @@ const FAQ = [
   },
   {
     q: "Mon argent est-il prot\u00e9g\u00e9 ?",
-    a: "Oui. Tinda Cash s\u2019appuie sur des partenaires enti\u00e8rement r\u00e9glement\u00e9s : Flutterwave (agr\u00e9\u00e9 CBN au Nig\u00e9ria), Wise (autoris\u00e9 FCA au Royaume-Uni) et Airwallex (r\u00e9gul\u00e9 en Europe). Vos fonds sont s\u00e9gr\u00e9gu\u00e9s, couverts par les m\u00e9canismes de protection en vigueur, et toutes les donn\u00e9es sont chiffr\u00e9es en AES-256. Nous ne touchons jamais directement \u00e0 vos fonds : ce sont nos partenaires licenci\u00e9s qui les d\u00e9tiennent.",
+    a: "Oui. Tinda Cash est actuellement en phase pilote et op\u00e8re en mode concierge : chaque transfert est v\u00e9rifi\u00e9 et ex\u00e9cut\u00e9 manuellement par notre \u00e9quipe via des partenaires r\u00e9gul\u00e9s (rails stablecoin r\u00e9gul\u00e9s + partenaires de payout locaux agr\u00e9\u00e9s en Angola et RDC). Vos fonds ne transitent jamais par un compte interm\u00e9diaire non r\u00e9gul\u00e9, et toutes les donn\u00e9es sont chiffr\u00e9es en AES-256. Notre incorporation europ\u00e9enne (Lituanie) est planifi\u00e9e apr\u00e8s la phase pilote pour passer en mode automatis\u00e9.",
   },
   {
     q: "Comment v\u00e9rifiez-vous mon identit\u00e9 ?",
@@ -1076,10 +1076,12 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <span className="text-xs text-white/30">&copy; {new Date().getFullYear()} Tinda Cash. {t("landing.footer.rights")}</span>
-            <div className="flex gap-4 text-xs text-white/30">
-              <a href="#" className="hover:text-white/50">{t("landing.footer.terms")}</a>
-              <a href="#" className="hover:text-white/50">{t("landing.footer.privacy")}</a>
-              <a href="#" className="hover:text-white/50">{t("landing.footer.legal")}</a>
+            <div className="flex flex-wrap gap-4 text-xs text-white/30">
+              <a href="/terms" className="hover:text-white/50">{t("landing.footer.terms")}</a>
+              <a href="/privacy" className="hover:text-white/50">{t("landing.footer.privacy")}</a>
+              <a href="/aml" className="hover:text-white/50">AML</a>
+              <a href="/complaints" className="hover:text-white/50">{t("landing.footer.legal")}</a>
+              <a href="/help" className="hover:text-white/50">Aide</a>
               <a href="mailto:support@tindacash.com" className="hover:text-white/50">Contact</a>
             </div>
           </div>

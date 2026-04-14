@@ -22,6 +22,7 @@ enum KycStatus {
 
 enum TransactionStatus {
   pending
+  awaiting_manual_processing
   processing
   completed
   failed
@@ -83,6 +84,7 @@ model User {
   emailVerified Boolean    @default(false)
   phoneVerified Boolean    @default(false)
   preferredLang String     @default("fr")
+  role          String     @default("user") // user | admin
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
