@@ -9,10 +9,12 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature") || "";
   const rawBody = await req.text();
 
-  const event = verifyWebhook(rawBody, signature);
-  if (!event) {
+  const verified = verifyWebhook(rawBody, signature);
+  if (!verified) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
+  const { event, mode } = verified;
+  console.log(`[stripe/webhook] ${event.type} (${mode})`);
 
   try {
     switch (event.type) {

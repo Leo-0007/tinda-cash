@@ -17,6 +17,7 @@ const schema = z.object({
   recipientName: z.string().min(2).max(100),
   recipientPhone: z.string().min(4).max(32),
   deliveryMethod: z.string().min(2).max(64),
+  testMode: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -98,6 +99,8 @@ export async function POST(req: NextRequest) {
       console.warn("[checkout] DB unavailable, running in dev mock mode");
     }
 
+    const stripeMode = d.testMode ? "test" : "live";
+
     const session = await createCheckoutSession({
       txRef: ref,
       txId,
@@ -107,6 +110,7 @@ export async function POST(req: NextRequest) {
       description: `${d.recipientName} · ${d.toCountry} · ${d.deliveryMethod}`,
       successUrl: `${origin}/transfer/${ref}`,
       cancelUrl: `${origin}/send?cancelled=1`,
+      mode: stripeMode,
     });
 
     return NextResponse.json({
@@ -115,6 +119,7 @@ export async function POST(req: NextRequest) {
       txId,
       checkoutUrl: session.url,
       devMode: session.devMode,
+      stripeMode,
     });
   } catch (err: any) {
     console.error("[api/checkout]", err);

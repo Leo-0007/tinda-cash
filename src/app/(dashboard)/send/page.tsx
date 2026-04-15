@@ -77,7 +77,7 @@ export default function SendPage() {
 
   const handleNext = () => {
     if (step === "confirm") {
-      handleSubmit();
+      handleSubmit(false);
       return;
     }
     const idx = steps.findIndex((s) => s.key === step);
@@ -89,7 +89,7 @@ export default function SendPage() {
     if (idx > 0) setStep(steps[idx - 1].key);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (testMode: boolean = false) => {
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/checkout", {
@@ -107,6 +107,7 @@ export default function SendPage() {
           recipientName,
           recipientPhone,
           deliveryMethod,
+          testMode,
         }),
       });
       const data = await res.json();
@@ -493,22 +494,36 @@ export default function SendPage() {
 
       {/* CTA */}
       {(step as string) !== "success" && (
-        <button
-          onClick={handleNext}
-          disabled={!canNext() || isSubmitting}
-          className="btn-primary w-full"
-        >
-          {isSubmitting ? (
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-[#030F0D]/30 border-t-[#030F0D] rounded-full animate-spin" />
-              {t("send.processing")}
-            </span>
-          ) : step === "confirm" ? (
-            <>{t("send.confirm_send")} <Send size={16} /></>
-          ) : (
-            <>{t("common.continue")} <ArrowRight size={16} /></>
+        <div className="space-y-2">
+          <button
+            onClick={handleNext}
+            disabled={!canNext() || isSubmitting}
+            className="btn-primary w-full"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-[#030F0D]/30 border-t-[#030F0D] rounded-full animate-spin" />
+                {t("send.processing")}
+              </span>
+            ) : step === "confirm" ? (
+              <>{t("send.confirm_send")} <Send size={16} /></>
+            ) : (
+              <>{t("common.continue")} <ArrowRight size={16} /></>
+            )}
+          </button>
+
+          {step === "confirm" && (
+            <button
+              type="button"
+              onClick={() => handleSubmit(true)}
+              disabled={!canNext() || isSubmitting}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-dashed border-amber-500/40 bg-amber-500/[0.04] text-amber-300 text-sm font-medium hover:bg-amber-500/[0.08] transition-colors disabled:opacity-40"
+              title="Carte test : 4242 4242 4242 4242 — aucun débit réel"
+            >
+              🧪 Payer en mode TEST (CB fictive 4242…)
+            </button>
           )}
-        </button>
+        </div>
       )}
     </div>
   );
