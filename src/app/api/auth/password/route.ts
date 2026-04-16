@@ -35,8 +35,8 @@ export async function PUT(request: NextRequest) {
         select: { password: true },
       });
 
-      if (!fullUser) {
-        return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
+      if (!fullUser || !fullUser.password) {
+        return NextResponse.json({ error: "Utilisateur introuvable ou compte Google (pas de mot de passe)" }, { status: 404 });
       }
 
       // Verify current password

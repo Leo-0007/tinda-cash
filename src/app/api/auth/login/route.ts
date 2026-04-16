@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
 
-      if (!user) return invalidCredentials;
+      if (!user || !user.password) return invalidCredentials;
       if (!user.isActive) {
         return NextResponse.json(
           { error: "Compte désactivé. Contactez le support." },
